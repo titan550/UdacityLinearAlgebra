@@ -149,3 +149,9 @@ class Vector(object):
         """Returns the area of the parallelogram created by
         connecting itself with the input vector"""
         return Decimal('0.5')*self.area_of_parallelogram_with(input_vector)
+
+    def __getitem__(self, i):
+        return self.coordinates[i]
+
+    def __iter__(self):
+        return self.coordinates.__iter__()
