@@ -11,7 +11,7 @@ class Line(object):
     NO_NONZERO_ELTS_FOUND_MSG = 'No nonzero elements found'
 
     def __init__(self, normal_vector=None, constant_term=None):
-        self.dimension = 2
+        self.dimension = len(normal_vector.coordinates)
 
         if not normal_vector:
             all_zeros = ['0']*self.dimension
@@ -25,7 +25,7 @@ class Line(object):
         self.set_basepoint()
 
     def set_basepoint(self):
-        """This class finds the basepoint for the line"""
+        """Finds the basepoint for the line"""
         try:
             n = self.normal_vector
             c = self.constant_term
@@ -42,6 +42,41 @@ class Line(object):
                 self.basepoint = None
             else:
                 raise e
+
+    def intersection_with(self, line):
+        if self.dimension != line.dimension or self.dimension != 2:
+            raise Exception(NotImplemented)
+        if self.is_parallel_to(line):
+            if self == line:
+                return self
+            else:
+                return None
+        denom = (self.normal_vector[0]*line.normal_vector[1] -
+                 self.normal_vector[1]*line.normal_vector[0])
+        x_1 = (line.normal_vector[1]*self.constant_term -
+               self.normal_vector[1]*line.constant_term)/denom
+        x_2 = (self.normal_vector[0]*line.constant_term -
+               line.normal_vector[0]*self.constant_term)/denom
+        return [x_1, x_2]
+
+    def is_parallel_to(self, line):
+        """Returns True if this line is parallel with the input line"""
+        return self.normal_vector.is_parallel_to(line.normal_vector)
+
+    def __eq__(self, line):
+        """Returns True is the this line is equal to the input line"""
+        if self.normal_vector.is_zero():
+            if not line.normal_vector.is_zero():
+                return False
+            else:
+                diff = self.constant_term - line.constant_term
+                return MyDecimal(diff).is_near_zero()
+        elif line.normal_vector.is_zero():
+            return False
+        if not self.is_parallel_to(line):
+            return False
+        basepints_vector = self.basepoint.minus(line.basepoint)
+        return basepints_vector.is_orthogonal_to(self.normal_vector)
 
     def __str__(self):
         """Creates the string format of this line's equation"""
@@ -101,8 +136,28 @@ class Line(object):
 
 
 class MyDecimal(Decimal):
-    """Custom class for decimal operations"""
+    """Extension class for decimal operations"""
     def is_near_zero(self, eps=1e-10):
         """Checks if itself is smaller than the
         input value or the default value"""
         return abs(self) < eps
+
+l1 = Line(Vector([4.046, 2.836]), 1.21)
+l2 = Line(Vector([10.115, 7.09]), 3.025)
+
+l1 = Line(Vector([7.204, 3.182]), 8.68)
+l2 = Line(Vector([8.172, 4.114]), 9.883)
+
+l1 = Line(Vector([1.182, 5.562]), 6.744)
+l2 = Line(Vector([1.773, 8.343]), 9.525)
+
+l1 = Line(Vector([4.046, 2.836, 1]), 1.21)
+l2 = Line(Vector([10.115, 7.09, 1]), 3.025)
+
+l1 = Line(Vector([4.046, 2.836]), 1.21)
+l2 = Line(Vector([2*4.046, 2*2.836]), 2*1.21)
+
+l1.intersection_with(l2)
+
+if l1 == l2:
+    print("hello")

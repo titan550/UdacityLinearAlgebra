@@ -58,7 +58,7 @@ class Vector(object):
         """Subtract the input from the current vector)"""
         new_coordinates = [x-y for x, y in
                            zip(self.coordinates, input_vector.coordinates)]
-        return new_coordinates
+        return Vector(new_coordinates)
 
     def magnitude(self):
         """Get the magnitude of the vector"""
