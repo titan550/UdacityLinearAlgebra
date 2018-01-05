@@ -1,4 +1,3 @@
-"""This module is from the Udacity Course on Linear Algebra"""
 from decimal import Decimal, getcontext
 
 from vector import Vector
@@ -6,12 +5,12 @@ from vector import Vector
 getcontext().prec = 30
 
 
-class Line(object):
-    """This class defines a line"""
+class Plane(object):
+
     NO_NONZERO_ELTS_FOUND_MSG = 'No nonzero elements found'
 
     def __init__(self, normal_vector=None, constant_term=None):
-        self.dimension = len(normal_vector.coordinates)
+        self.dimension = 3
 
         if not normal_vector:
             all_zeros = ['0']*self.dimension
@@ -24,62 +23,43 @@ class Line(object):
 
         self.set_basepoint()
 
+    def is_parallel_to(self, plane, tolerance=1e-10):
+        return self.normal_vector.is_parallel_to(plane.normal_vector, tolerance)
+
     def set_basepoint(self):
-        """Finds the basepoint for the line"""
         try:
             n = self.normal_vector
             c = self.constant_term
             basepoint_coords = ['0']*self.dimension
 
-            initial_index = Line.first_nonzero_index(n)
+            initial_index = Plane.first_nonzero_index(n)
             initial_coefficient = n[initial_index]
 
             basepoint_coords[initial_index] = c/initial_coefficient
             self.basepoint = Vector(basepoint_coords)
 
         except Exception as e:
-            if str(e) == Line.NO_NONZERO_ELTS_FOUND_MSG:
+            if str(e) == Plane.NO_NONZERO_ELTS_FOUND_MSG:
                 self.basepoint = None
             else:
                 raise e
 
-    def intersection_with(self, line):
-        if self.dimension != line.dimension or self.dimension != 2:
-            raise Exception(NotImplemented)
-        if self.is_parallel_to(line):
-            if self == line:
-                return self
-            else:
-                return None
-        denom = (self.normal_vector[0]*line.normal_vector[1] -
-                 self.normal_vector[1]*line.normal_vector[0])
-        x_1 = (line.normal_vector[1]*self.constant_term -
-               self.normal_vector[1]*line.constant_term)/denom
-        x_2 = (self.normal_vector[0]*line.constant_term -
-               line.normal_vector[0]*self.constant_term)/denom
-        return [x_1, x_2]
-
-    def is_parallel_to(self, line):
-        """Returns True if this line is parallel with the input line"""
-        return self.normal_vector.is_parallel_to(line.normal_vector)
-
-    def __eq__(self, line):
-        """Returns True is the this line is equal to the input line"""
+    def __eq__(self, plane):
         if self.normal_vector.is_zero():
-            if not line.normal_vector.is_zero():
+            if not plane.normal_vector.is_zero():
                 return False
             else:
-                diff = self.constant_term - line.constant_term
+                diff = self.constant_term - plane.constant_term
                 return MyDecimal(diff).is_near_zero()
-        elif line.normal_vector.is_zero():
+        elif plane.normal_vector.is_zero():
             return False
-        if not self.is_parallel_to(line):
+        if not self.is_parallel_to(plane):
             return False
-        basepints_vector = self.basepoint.minus(line.basepoint)
+        basepints_vector = self.basepoint.minus(plane.basepoint)
         return basepints_vector.is_orthogonal_to(self.normal_vector)
 
     def __str__(self):
-        """Creates the string format of this line's equation"""
+
         num_decimal_places = 3
 
         def write_coefficient(coefficient, is_initial_term=False):
@@ -105,10 +85,9 @@ class Line(object):
         n = self.normal_vector
 
         try:
-            initial_index = Line.first_nonzero_index(n)
-            terms = [write_coefficient(n[i],
-                                       is_initial_term=(i == initial_index)) + 'x_{}'.format(i+1)
-                     for i in range(self.dimension)
+            initial_index = Plane.first_nonzero_index(n)
+            terms = [write_coefficient(n[i], is_initial_term=(i==initial_index)) + 'x_{}'.format(i+1)
+                     for i in range(self.dimension) 
                      if round(n[i], num_decimal_places) != 0]
             output = ' '.join(terms)
 
@@ -127,17 +106,27 @@ class Line(object):
 
     @staticmethod
     def first_nonzero_index(iterable):
-        """Returns the index of the first non-zero
-        element in the input vector"""
         for k, item in enumerate(iterable):
             if not MyDecimal(item).is_near_zero():
                 return k
-        raise Exception(Line.NO_NONZERO_ELTS_FOUND_MSG)
+        raise Exception(Plane.NO_NONZERO_ELTS_FOUND_MSG)
 
 
 class MyDecimal(Decimal):
-    """Extension class for decimal operations"""
     def is_near_zero(self, eps=1e-10):
-        """Checks if itself is smaller than the
-        input value or the default value"""
         return abs(self) < eps
+
+
+
+
+p1 = Plane(Vector([-0.412, 3.806, 0.728]), -3.46)
+p2 = Plane(Vector([1.03, -9.515, -1.82]), 8.65)
+
+p1 = Plane(Vector([2.611, 5.528, 0.283]), 4.6)
+p2 = Plane(Vector([7.715, 8.306, 5.342]), 3.76)
+
+p1 = Plane(Vector([-7.926, 8.625, -7.212]), -7.952)
+p2 = Plane(Vector([-2.642, 2.875, -2.404]), -2.443)
+
+p1 == p2
+p1.is_parallel_to(p2)

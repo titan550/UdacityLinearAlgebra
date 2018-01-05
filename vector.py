@@ -37,12 +37,13 @@ class Vector(object):
         """Checks if this vector is zero"""
         return self.magnitude() < tolerance
 
-    def is_parallel_to(self, input_vector):
+    def is_parallel_to(self, input_vector, tolerance=1e-10):
         """Checks if this vector is parallel to the input vector"""
         return (self.is_zero() or
                 input_vector.is_zero() or
-                self.angle_with(input_vector) == 0 or
-                self.angle_with(input_vector) == pi)
+                self.angle_with(input_vector) < tolerance or
+                (self.angle_with(input_vector) < pi+tolerance and
+                 self.angle_with(input_vector) > pi-tolerance))
 
     def is_orthogonal_to(self, input_vector, tolerance=1e-10):
         """Checks if this vector is orthogonal"""
