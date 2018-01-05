@@ -1,0 +1,1 @@
+The course URL is: https://classroom.udacity.com/courses/ud953
