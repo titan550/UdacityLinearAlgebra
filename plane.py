@@ -24,7 +24,8 @@ class Plane(object):
         self.set_basepoint()
 
     def is_parallel_to(self, plane, tolerance=1e-10):
-        return self.normal_vector.is_parallel_to(plane.normal_vector, tolerance)
+        return self.normal_vector.is_parallel_to(plane.normal_vector,
+                                                 tolerance)
 
     def set_basepoint(self):
         try:
@@ -86,8 +87,10 @@ class Plane(object):
 
         try:
             initial_index = Plane.first_nonzero_index(n)
-            terms = [write_coefficient(n[i], is_initial_term=(i==initial_index)) + 'x_{}'.format(i+1)
-                     for i in range(self.dimension) 
+            terms = [write_coefficient(n[i],
+                     is_initial_term=(i == initial_index))
+                     + 'x_{}'.format(i+1)
+                     for i in range(self.dimension)
                      if round(n[i], num_decimal_places) != 0]
             output = ' '.join(terms)
 
@@ -115,18 +118,3 @@ class Plane(object):
 class MyDecimal(Decimal):
     def is_near_zero(self, eps=1e-10):
         return abs(self) < eps
-
-
-
-
-p1 = Plane(Vector([-0.412, 3.806, 0.728]), -3.46)
-p2 = Plane(Vector([1.03, -9.515, -1.82]), 8.65)
-
-p1 = Plane(Vector([2.611, 5.528, 0.283]), 4.6)
-p2 = Plane(Vector([7.715, 8.306, 5.342]), 3.76)
-
-p1 = Plane(Vector([-7.926, 8.625, -7.212]), -7.952)
-p2 = Plane(Vector([-2.642, 2.875, -2.404]), -2.443)
-
-p1 == p2
-p1.is_parallel_to(p2)
