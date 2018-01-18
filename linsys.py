@@ -1,5 +1,5 @@
 from decimal import Decimal, getcontext
-# from copy import deepcopy
+from copy import deepcopy
 # from vector import Vector
 from plane import Plane
 
@@ -59,6 +59,12 @@ class LinearSystem(object):
                     raise e
 
         return indices
+
+    def compute_triangular_form(self):
+        sorted_planes = deepcopy(self.planes)
+        sorted_planes.sort(reverse=True, key=lambda plane: len([x for x in plane.normal_vector if x != 0]))
+
+        return LinearSystem(sorted_planes)
 
     def __len__(self):
         return len(self.planes)
