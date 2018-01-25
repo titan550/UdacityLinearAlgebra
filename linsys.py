@@ -61,10 +61,27 @@ class LinearSystem(object):
         return indices
 
     def compute_triangular_form(self):
-        sorted_planes = deepcopy(self.planes)
-        sorted_planes.sort(reverse=True, key=lambda plane: len([x for x in plane.normal_vector if x != 0]))
-
-        return LinearSystem(sorted_planes)
+        system = deepcopy(self)
+        col = 0
+        for row in range(len(system)):
+            while col < system.dimension:
+                if system[row].normal_vector.coordinates[col] == 0:
+                    swap_with_index = (next((row2 for row2, plane in enumerate(system)
+                                            if row2 > row and plane.normal_vector.coordinates[col] != 0), None))
+                    # Gets the first plane with a non-zero value at dimension i
+                    if swap_with_index:
+                        system.swap_rows(row, swap_with_index)
+                    else:
+                        col += 1
+                        continue
+                system.clear_coefficients_below(row, col)
+                for row2 in range(row+1, len(system)):
+                    coefficient = system[row2].normal_vector[col]/system[row].normal_vector[col]
+                    system.add_multiple_times_row_to_row(coefficient, row, row2)
+                # Sets all the following rows to zero
+                col += 1
+                break
+        return system
 
     def __len__(self):
         return len(self.planes)
