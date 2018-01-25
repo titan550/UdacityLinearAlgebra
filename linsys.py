@@ -74,9 +74,8 @@ class LinearSystem(object):
                     else:
                         col += 1
                         continue
-                system.clear_coefficients_below(row, col)
                 for row2 in range(row+1, len(system)):
-                    coefficient = system[row2].normal_vector[col]/system[row].normal_vector[col]
+                    coefficient = - system[row2].normal_vector[col]/system[row].normal_vector[col]
                     system.add_multiple_times_row_to_row(coefficient, row, row2)
                 # Sets all the following rows to zero
                 col += 1
