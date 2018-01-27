@@ -65,7 +65,8 @@ class LinearSystem(object):
         col = 0
         for row in range(len(system)):
             while col < system.dimension:
-                if system[row].normal_vector.coordinates[col] == 0:
+                c = MyDecimal(system[row].normal_vector.coordinates[col])
+                if c.is_near_zero():
                     swap_with_index = (next((row2 for row2, plane in enumerate(system)
                                             if row2 > row and plane.normal_vector.coordinates[col] != 0), None))
                     # Gets the first plane with a non-zero value at dimension i
