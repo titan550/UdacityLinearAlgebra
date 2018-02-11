@@ -4,16 +4,24 @@ from vector import Vector
 getcontext().prec = 30
 
 
-class Plane(object):
+class Hyperplane(object):
 
     NO_NONZERO_ELTS_FOUND_MSG = 'No nonzero elements found'
+    EITHER_DIM_OR_NORMAL_VEC_MUST_BE_PROVIDED_MSG = (
+        'Either the dimension of the hyperplane or the normal vector '
+        'must be provided')
 
-    def __init__(self, normal_vector=None, constant_term=None):
-        self.dimension = 3
+    def __init__(self, dimension=None, normal_vector=None, constant_term=None):
+        if not dimension and not normal_vector:
+            raise Exception(self.EITHER_DIM_OR_NORMAL_VEC_MUST_BE_PROVIDED_MSG)
 
-        if not normal_vector:
-            all_zeros = ['0']*self.dimension
+        elif not normal_vector:
+            self.dimension = dimension
+            all_zeros = ['0'] * self.dimension
             normal_vector = Vector(all_zeros)
+        else:
+            self.dimension = normal_vector.dimension
+
         self.normal_vector = normal_vector
 
         if not constant_term:

@@ -2,6 +2,7 @@ from decimal import Decimal, getcontext
 from copy import deepcopy
 from vector import Vector
 from plane import Plane
+from hyperplane import Hyperplane
 
 getcontext().prec = 30
 
@@ -84,15 +85,31 @@ class LinearSystem(object):
                 break
         return system
 
+# Used the function from solution. Debug later.
+#     def compute_rref_my_old_func(self):
+#         tf = self.compute_triangular_form()
+#         num_equations = len(tf)
+#         pivot_indices = tf.indices_of_first_nonzero_terms_in_each_row()
+#         for i in range(num_equations)[::-1]:
+#             j = pivot_indices[i]
+#             if j > 0:
+#                 tf.scale_row_to_make_coefficient_equal_one(i, j)
+#                 tf.clear_coefficients_above(i, j)
+#         return tf
+
     def compute_rref(self):
         tf = self.compute_triangular_form()
+
         num_equations = len(tf)
         pivot_indices = tf.indices_of_first_nonzero_terms_in_each_row()
-        for i in range(num_equations)[::-1]:
-            j = pivot_indices[i]
-            if j > 0:
-                tf.scale_row_to_make_coefficient_equal_one(i, j)
-                tf.clear_coefficients_above(i, j)
+
+        for row in range(num_equations)[::-1]:
+            pivot_var = pivot_indices[row]
+            if pivot_var < 0:
+                continue
+            tf.scale_row_to_make_coefficient_equal_one(row, pivot_var)
+            tf.clear_coefficients_above(row, pivot_var)
+
         return tf
 
     def scale_row_to_make_coefficient_equal_one(self, row, col):
@@ -108,7 +125,7 @@ class LinearSystem(object):
 
     def compute_solution(self):
         try:
-            return self.do_gaussian_elimination_and_extract_solution()
+            return self.do_gaussian_elimination_and_parametrize_solution()
         except Exception as e:
             if(str(e) == self.NO_SOLUTIONS_MSG or
                     str(e) == self.INF_SOLUTIONS_MSG):
@@ -146,6 +163,62 @@ class LinearSystem(object):
         if num_pivots < num_variables:
             raise Exception(self.INF_SOLUTIONS_MSG)
 
+    # Used the function from solution. Debug later.
+    # def compute_solution_my_old_func(self):
+    #     self.compute_rref()
+    #     params = [[Decimal('0') for y in range(len(self))] for z in range(self.dimension)]
+    #     for row in range(len(self)):
+    #         for col in range(self.dimension):
+    #             if col != row:
+    #                 params[col][row] = - self[row].normal_vector.coordinates[col]
+    #     return params
+
+    def do_gaussian_elimination_and_parametrize_solution(self):
+        rref = self.compute_rref()
+        rref.raise_exception_if_contradictory_equation()
+        direction_vectors = rref.extract_direction_vectors_for_parametrization()
+        basepoint = rref.extract_basepoint_for_parametrization()
+
+        return Parametrization(basepoint, direction_vectors)
+
+    def extract_direction_vectors_for_parametrization(self):
+        num_variables = self.dimension
+        pivot_indices = self.indices_of_first_nonzero_terms_in_each_row()
+        free_variable_indices = set(range(num_variables)) - set(pivot_indices)
+
+        direction_vectors = []
+
+        for free_var in free_variable_indices:
+            vector_coords = [0] * num_variables
+            vector_coords[free_var] = 1
+            for index, plane in enumerate(self.planes):
+                pivot_var = pivot_indices[index]
+                if pivot_var < 0:
+                    break
+                vector_coords[pivot_var] = -plane.normal_vector[free_var]
+
+            direction_vectors.append(Vector(vector_coords))
+
+        return direction_vectors
+
+    def do_gaussian_elimination_and_extract_solution(self):
+        raise NotImplementedError
+
+    def extract_basepoint_for_parametrization(self):
+        num_variables = self.dimension
+        pivot_indices = self.indices_of_first_nonzero_terms_in_each_row()
+
+        basepoint_coords = [0] * num_variables
+
+        for index, plane in enumerate(self.planes):
+            pivot_var = pivot_indices[index]
+            if pivot_var < 0:
+                break
+            basepoint_coords[pivot_var] = plane.constant_term
+
+        return Vector(basepoint_coords)
+
+
     def __len__(self):
         return len(self.planes)
 
@@ -171,3 +244,34 @@ class LinearSystem(object):
 class MyDecimal(Decimal):
     def is_near_zero(self, eps=1e-10):
         return abs(self) < eps
+
+class Parametrization(object):
+
+    BASEPT_AND_DIR_VECTORS_MUST_BE_IN_SAME_DIM = (
+        'The basepoint and direction vectors should all live in the same '
+        'dimension')
+
+    def __init__(self, basepoint, direction_vectors):
+
+        self.basepoint = basepoint
+        self.direction_vectors = direction_vectors
+        self.dimension = self.basepoint.dimension
+
+        try:
+            for v in direction_vectors:
+                assert v.dimension == self.dimension
+
+        except AssertionError:
+            raise Exception(self.BASEPT_AND_DIR_VECTORS_MUST_BE_IN_SAME_DIM)
+
+    def __str__(self):
+
+        output = ''
+        for coord in range(self.dimension):
+            output += 'x_{} = {} '.format(coord + 1,
+                                          round(self.basepoint[coord], 3))
+            for free_var, vector in enumerate(self.direction_vectors):
+                output += '+ {} t_{}'.format(round(vector[coord], 3),
+                                             free_var + 1)
+            output += '\n'
+        return output
